@@ -1,7 +1,8 @@
 
 // File: @openzeppelin/contracts/GSN/Context.sol
 
-pragma solidity ^0.5.0;
+//pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -31,7 +32,7 @@ contract Context {
 
 // File: @openzeppelin/contracts/introspection/IERC165.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 /**
  * @dev Interface of the ERC165 standard, as defined in the
@@ -56,7 +57,7 @@ interface IERC165 {
 
 // File: @openzeppelin/contracts/token/ERC721/IERC721.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 
 /**
@@ -111,7 +112,7 @@ contract IERC721 is IERC165 {
 
 // File: @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 /**
  * @title ERC721 token receiver interface
@@ -139,7 +140,7 @@ contract IERC721Receiver {
 
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -298,7 +299,7 @@ library SafeMath {
 
 // File: @openzeppelin/contracts/utils/Address.sol
 
-pragma solidity ^0.5.5;
+pragma solidity 0.5.17;
 
 /**
  * @dev Collection of functions related to the address type
@@ -371,7 +372,7 @@ library Address {
 
 // File: @openzeppelin/contracts/drafts/Counters.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 
 /**
@@ -411,7 +412,7 @@ library Counters {
 
 // File: @openzeppelin/contracts/introspection/ERC165.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 
 /**
@@ -465,14 +466,7 @@ contract ERC165 is IERC165 {
 
 // File: @openzeppelin/contracts/token/ERC721/ERC721.sol
 
-pragma solidity ^0.5.0;
-
-
-
-
-
-
-
+pragma solidity 0.5.17;
 
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
@@ -833,7 +827,7 @@ contract ERC721 is Context, ERC165, IERC721 {
 
 // File: @openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 
 /**
@@ -849,7 +843,7 @@ contract IERC721Enumerable is IERC721 {
 
 // File: @openzeppelin/contracts/token/ERC721/ERC721Enumerable.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 
 
@@ -1051,7 +1045,7 @@ contract ERC721Enumerable is Context, ERC165, ERC721, IERC721Enumerable {
 
 // File: @openzeppelin/contracts/token/ERC721/IERC721Metadata.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 
 /**
@@ -1066,7 +1060,7 @@ contract IERC721Metadata is IERC721 {
 
 // File: @openzeppelin/contracts/token/ERC721/ERC721Metadata.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 
 
@@ -1197,7 +1191,7 @@ contract ERC721Metadata is Context, ERC165, ERC721, IERC721Metadata {
 
 // File: @openzeppelin/contracts/token/ERC721/ERC721Full.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 
 
@@ -1217,7 +1211,7 @@ contract ERC721Full is ERC721, ERC721Enumerable, ERC721Metadata {
 
 // File: contracts/library/Governance.sol
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 contract Governance {
 
@@ -1245,7 +1239,7 @@ contract Governance {
 }
 
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 
 library Util {
@@ -1271,12 +1265,14 @@ library Util {
 
 // File: contracts/nft/MathCon2Token.sol
 
-pragma solidity ^0.5.5;
+pragma solidity 0.5.17;
 
 contract NFTToken is ERC721Full, Governance {
     // for minters
     mapping(address => bool) public _minters;
-
+    event SET_URI_Prefix(address indexed owner, string baseURI);
+    event ADD_MINTER(address indexed owner,address indexed minter);
+    event REMOVE_MINTER(address indexed owner,address indexed minter);
 
 
     constructor(string memory name, string memory symbol,string memory URI) public ERC721Full(name, symbol) {
@@ -1286,6 +1282,7 @@ contract NFTToken is ERC721Full, Governance {
 
     function setURIPrefix(string memory baseURI) public onlyGovernance {
         _setBaseURI(baseURI);
+        emit SET_URI_Prefix(msg.sender,baseURI);
     }
 
 
@@ -1334,11 +1331,15 @@ contract NFTToken is ERC721Full, Governance {
     }
 
     function addMinter(address minter) public onlyGovernance {
+        require(minter != address(0), "new minter the zero address");
         _minters[minter] = true;
+        emit ADD_MINTER(msg.sender,minter);
     }
 
     function removeMinter(address minter) public onlyGovernance {
+        require(minter != address(0), "new minter the zero address");
         _minters[minter] = false;
+        emit REMOVE_MINTER(msg.sender,minter);
     }
 
     /**
