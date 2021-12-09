@@ -9,13 +9,19 @@ contract ERC20Token is ERC20 {
     uint8  private _decimals;
     bool   private _initialized;
 
+    address core=msg.sender;
+    event SET_CORE(address indexed core, address indexed _core);
+    modifier onlyCore() {
+        require(msg.sender == core, "Not Authorized");
+        _;
+    }
     function initialize(
         string memory name,
         string memory symbol,
         uint8 decimals,
         uint256 totalSupply,
         address owner
-    ) public {
+    ) public onlyCore{
         require(!_initialized, "ERR_TOKEN_HAS_INITIALIZED");
         _initialized = true;
 
@@ -26,15 +32,23 @@ contract ERC20Token is ERC20 {
         _mint(owner, totalSupply);
     }
 
-    function name() public view returns (string memory) {
+    function name() external view returns (string memory) {
         return _name;
     }
 
-    function symbol() public view returns (string memory) {
+    function symbol() external view returns (string memory) {
         return _symbol;
     }
 
-    function decimals() public view returns (uint8) {
+    function decimals() external view returns (uint8) {
         return _decimals;
+    }
+    function getCore() external view returns(address){
+        return core;
+    }
+    function setCore(address _core) public onlyCore {
+        require(_core != address(0), "new core the zero address");
+        emit SET_CORE(core, _core);
+        core = _core;
     }
 }
