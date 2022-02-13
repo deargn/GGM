@@ -147,7 +147,7 @@ contract GaiaStaking is ReentrancyGuard{
     mapping(address=>UserStream) private userList;//用户列表
 
     address owner;
-    event Staking(uint256 indexed streamId,address indexed sender,uint256 indexed stakingAmount,uint256 stakingTime,uint256 endTime);
+    event Staking(uint256 indexed streamId,address indexed user,uint256 indexed stakingAmount,uint256 stakingTime,uint256 endTime,address sender);
     event Withdraw(uint256 indexed streamId,address indexed sender,uint256 indexed withdrawAmount,uint256 withdrawTime);
     event ChangeWithdrawState(address indexed owner,bool indexed state);
     event ChangeOwner(address indexed owner,address indexed user);
@@ -157,7 +157,7 @@ contract GaiaStaking is ReentrancyGuard{
         _;
     }
     modifier onlyOwner {
-        require(msg.sender == owner, "not governance");
+        require(msg.sender == owner, "not owner");
         _;
     }
     constructor(address token) public{
@@ -178,7 +178,7 @@ contract GaiaStaking is ReentrancyGuard{
         stakingBase(toUser,stakingType, stakingAmount, stakingTime);
     }
     function stakingBase(address _toUser,uint256 _stakingType,uint256 _stakingAmount,uint256 _stakingTime) internal{
-        require(_stakingAmount>=10*ONE);
+        require(_stakingAmount>=10*ONE,"Less than minimum amount of deposit");
         require(_stakingType==stakingType1 || _stakingType==stakingType2 || _stakingType==stakingType3,"Wrong Staking type");
         stakingToken.transferFrom(msg.sender, address(this), _stakingAmount);
         uint256 _endTime;
@@ -196,7 +196,7 @@ contract GaiaStaking is ReentrancyGuard{
         userList[_toUser].amount+=1;
         userList[_toUser].balance+=_stakingAmount;
         userList[_toUser].streams.push(stream);
-        emit Staking(stream.streamId,msg.sender,_stakingAmount,_stakingTime,_endTime);
+        emit Staking(stream.streamId,_toUser,_stakingAmount,_stakingTime,_endTime,msg.sender);
     }
     function computeAmount(uint256 stakingType,uint256 inAmount,uint256 stakingTime) internal view returns(uint256 outAmount){
 
@@ -219,13 +219,13 @@ contract GaiaStaking is ReentrancyGuard{
     //取币
     function withdraw(uint256 streamId) public streamExists(streamId) nonReentrant{
         // 只有开启提币后，才能提取
-        require(isStartWithdraw==true);
+        require(isStartWithdraw==true,"isStartWithdraw is false");
         // 只有存入的人可以取币
         // require(stakingList[streamId].sender==msg.sender);
         Stream memory stream=userList[msg.sender].streams[streamId];
-        require(stream.sender==msg.sender);
+        require(stream.sender==msg.sender,"msg.sender don't own this steam");
         // 不能已经结束
-        require(stream.finish==false);
+        require(stream.finish==false,"the stream has finish");
 
         uint256 outAmount=computeAmount(stream.stakingType,stream.stakingAmount,stream.stakingTime);
         //给用户转币
@@ -282,7 +282,7 @@ contract GaiaStaking is ReentrancyGuard{
     }
 
     function changeOwner(address _owner) public onlyOwner{
-        require(_owner!=address(0));
+        require(_owner!=address(0),"owner cannot be address(0)");
         owner=_owner;
         emit ChangeOwner(msg.sender,_owner);
     }
