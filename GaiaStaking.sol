@@ -1,6 +1,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 /*
+存币生息，不扣本金
 BSN
 */
 abstract contract ReentrancyGuard {
@@ -210,6 +211,7 @@ contract GaiaStaking is ReentrancyGuard{
         }
         //当前时间
         uint256 time=block.timestamp;
+        require(time>=stakingTime,"The current time must be greater than the stakingtime time");
         if((time-stakingTime)>(stakingType*day)){
             outAmount=inAmount+inAmount.mul(rate*stakingType).div(100*360);
         }else{
@@ -232,7 +234,7 @@ contract GaiaStaking is ReentrancyGuard{
         stakingToken.transfer(stream.sender, outAmount);
         stream.finish=true;
         stream.withdrawable=0;
-        require(userList[msg.sender].balance>=stream.stakingAmount);
+        require(userList[msg.sender].balance>=stream.stakingAmount,"The total amount should be greater than stream amount ");
         userList[msg.sender].balance-=stream.stakingAmount;
         userList[msg.sender].streams[streamId]=stream;
         emit Withdraw(streamId,msg.sender,outAmount,block.timestamp);
